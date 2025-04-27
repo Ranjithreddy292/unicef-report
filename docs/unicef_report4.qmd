@@ -1,0 +1,187 @@
+---
+title: "Exploratory Analysis of Global Child Well-being Indicators"
+subtitle: "An Interactive Visualization Project using UNICEF Data"
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    embed-resources: true
+    smooth-scroll: true
+    page-layout: full
+    number-sections: true
+    css: styles.css 
+---
+
+##  Student Details
+
+- Name: Ranjith Reddy Pannala
+
+- Student ID: A00047725
+
+- Course: MSc in management (strategy)
+
+- Module: DATA ANALYTICS AND STORY TELLING
+
+---
+
+
+## Executive Summary
+
+This report explores key indicators from UNICEF's global dataset with an emphasis on data storytelling and interactive visualization principles. We uncover patterns that may influence global child well-being and recommend future research directions.
+
+---
+
+## Goal
+
+To visually analyze UNICEF's global dataset using various exploratory plots, identify patterns across regions and demographics, and build a foundation for actionable insights aiding UNICEF’s mission.
+
+---
+
+## Introduction
+
+Children's well-being across the globe depends on multiple dynamic factors including education, health, and social equality. Using the UNICEF dataset, this analysis aims to visually represent different indicators to better understand global disparities and trends.
+
+
+---
+
+## Data Preview
+
+A preview of the dataset used in this analysis:
+
+```{python}
+import pandas as pd
+df = pd.read_csv("unicef_indicator_cleaned.csv")
+df.head()
+```
+
+---
+
+## World Map: Visualizing Current Age by Country
+
+
+This map shows the average current age of children across different countries, revealing demographic patterns worldwide.
+
+```{python}
+import geopandas as gpd
+import matplotlib.pyplot as plt
+
+shapefile_path = r'C:\Users\satya\OneDrive\Desktop\quarto_unicef_report\ne_110m_admin_0_countries.shp'
+world = gpd.read_file(shapefile_path)
+
+# Merge with the dataset
+map_data = world.merge(df, left_on='ADMIN', right_on='country')
+
+# Plot: Using 'current_age'
+ax = map_data.plot(column='current_age', cmap='viridis', legend=True, figsize=(12, 9), edgecolor='black')
+ax.set_title('Average Current Age by Country', fontsize=16)
+plt.axis('off')
+plt.show()
+
+```
+This world map displays the average current age of children across different countries. By visualizing demographic patterns geographically, we can quickly spot regions with younger or older child populations. Such insights help UNICEF and policymakers tailor age-specific interventions and allocate resources more effectively.
+
+
+---
+
+## Time Series: Sex Differences in Selected Countries
+
+This time series tracks the indicator value split by sex across selected countries over time.
+
+```{python}
+from plotnine import ggplot, aes, geom_line, labs, theme_light, facet_wrap
+
+df['time_period'] = pd.to_datetime(df['time_period'], errors='coerce')
+
+(
+    ggplot(df[df['country'].isin(['India', 'Brazil', 'Kenya'])], aes('time_period', 'obs_value', color='sex')) +
+    geom_line(size=1.2) +
+    labs(title='Time Trend by Sex in Selected Countries', x='Year', y='Indicator Value') +
+    facet_wrap('country') +
+    theme_light()
+)
+
+
+```
+The time series plot tracks changes in the indicator values over time, split by sex (male, female) for selected countries (India, Brazil, and Kenya). Observing these trends helps highlight gender-based disparities and understand how different policies, social structures, or crises impact boys and girls differently over the years.
+
+---
+
+## Scatter Plot: Current Age vs Time Period (Trend)
+
+This scatter plot examines the relationship between current age and year, with a regression line to spot any aging trends over time.
+
+```{python}
+from plotnine import geom_point, geom_smooth
+
+# Drop missing values
+plot_df = df.dropna(subset=['current_age', 'time_period'])
+
+plot = (
+    ggplot(plot_df, aes('time_period', 'current_age')) +
+    geom_point(alpha=0.5, color='blue') +
+    geom_smooth(method='lm', color='red') +
+    labs(title='Current Age over Time', x='Year', y='Current Age') +
+    theme_light()
+)
+
+plot
+
+
+
+
+```
+This scatter plot investigates whether the current age of observed children shows any trend over different years. The added regression line indicates if there is a statistically noticeable shift — for example, whether reported ages are getting younger or older over time, hinting at possible demographic shifts or changes in survey methodologies.
+
+---
+## Bar Chart: Observation Status across Countries
+
+A bar chart summarizing the count of different observation statuses for the top 10 countries in the dataset.
+
+```{python}
+# Prepare data
+from plotnine import ggplot, aes, geom_bar, labs, theme_light, theme, element_text
+
+bar_data = df['country'].value_counts().head(10).reset_index()
+bar_data.columns = ['country', 'count']
+
+(
+    ggplot(bar_data, aes('country', 'count', fill='country')) +
+    geom_bar(stat='identity') +
+    labs(title='Top 10 Countries by Observation Count', x='Country', y='Count') +
+    theme_light() +
+    theme(axis_text_x=element_text(rotation=45, hjust=1))
+)
+
+```
+
+The bar chart summarizes the number of recorded observations (by observation status) for the top 10 countries. This visualization helps identify countries with stronger data reporting practices and potential biases in data collection. It also points out where UNICEF’s future data efforts could be concentrated to ensure comprehensive and equitable reporting.
+
+---
+
+## Conclusion
+
+Through this visual journey, we observe notable regional disparities, gender differences, and temporal patterns. Such analysis can guide UNICEF initiatives by pinpointing where interventions are most urgently needed.
+
+---
+
+## Future Work
+- Explore deeper indicator relationships using multivariate analysis.
+
+- Integrate external datasets (e.g., GDP, education rates) for richer context.
+
+- Develop predictive models to forecast child well-being indicators.
+
+---
+
+## References
+
+- UNICEF Data: https://data.unicef.org/
+
+- Natural Earth Shapefiles: https://www.naturalearthdata.com/
+
+- Wickham, H. (2016). ggplot2: Elegant Graphics for Data Analysis. Springer-Verlag.
+
+
+
